@@ -6,10 +6,7 @@ The application allows you to receive from open sources and save to the files in
 
 ## Installation
 
-Clone the repository to your computer:
-```bash
-git clone https://github.com/mnv/python-course-country-directory.git
-```
+Clone the repository to your computer.
 
 ### Requirements:
 
