@@ -22,12 +22,7 @@ from collectors.models import (
     CurrencyInfoDTO,
     WeatherInfoDTO,
 )
-from settings import (
-    MEDIA_PATH,
-    CACHE_TTL_COUNTRY,
-    CACHE_TTL_CURRENCY_RATES,
-    CACHE_TTL_WEATHER,
-)
+from settings import settings
 
 
 class CountryCollector(BaseCollector):
@@ -40,11 +35,11 @@ class CountryCollector(BaseCollector):
 
     @staticmethod
     async def get_file_path(**kwargs: Any) -> str:
-        return f"{MEDIA_PATH}/country.json"
+        return f"{settings.MEDIA_PATH}/country.json"
 
     @staticmethod
     async def get_cache_ttl() -> int:
-        return CACHE_TTL_COUNTRY
+        return settings.CACHE_TTL_COUNTRY
 
     async def collect(self, **kwargs: Any) -> Optional[FrozenSet[LocationDTO]]:
         if await self.cache_invalid():
@@ -103,6 +98,7 @@ class CountryCollector(BaseCollector):
                         population=item["population"],
                         subregion=item["subregion"],
                         timezones=item["timezones"],
+                        area=item["area"],
                     )
                 )
 
@@ -121,11 +117,11 @@ class CurrencyRatesCollector(BaseCollector):
 
     @staticmethod
     async def get_file_path(**kwargs: Any) -> str:
-        return f"{MEDIA_PATH}/currency_rates.json"
+        return f"{settings.MEDIA_PATH}/currency_rates.json"
 
     @staticmethod
     async def get_cache_ttl() -> int:
-        return CACHE_TTL_CURRENCY_RATES
+        return settings.CACHE_TTL_CURRENCY_RATES
 
     async def collect(self, **kwargs: Any) -> None:
         if await self.cache_invalid():
@@ -169,17 +165,17 @@ class WeatherCollector(BaseCollector):
 
     @staticmethod
     async def get_file_path(filename: str = "", **kwargs: Any) -> str:
-        return f"{MEDIA_PATH}/weather/{filename}.json"
+        return f"{settings.MEDIA_PATH}/weather/{filename}.json"
 
     @staticmethod
     async def get_cache_ttl() -> int:
-        return CACHE_TTL_WEATHER
+        return settings.CACHE_TTL_WEATHER
 
     async def collect(
         self, locations: FrozenSet[LocationDTO] = frozenset(), **kwargs: Any
     ) -> None:
 
-        target_dir_path = f"{MEDIA_PATH}/weather"
+        target_dir_path = f"{settings.MEDIA_PATH}/weather"
         # если целевой директории еще не существует, то она создается
         if not await aiofiles.os.path.exists(target_dir_path):
             await aiofiles.os.mkdir(target_dir_path)
@@ -219,6 +215,8 @@ class WeatherCollector(BaseCollector):
                 humidity=result["main"]["humidity"],
                 wind_speed=result["wind"]["speed"],
                 description=result["weather"][0]["description"],
+                visibility=result["visibility"],
+                timezone=result["timezone"],
             )
 
         return None
@@ -242,3 +240,7 @@ class Collectors:
 
         finally:
             loop.close()
+
+
+if __name__ == "__main__":
+    print(Collectors().collect())
