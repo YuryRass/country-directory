@@ -8,7 +8,7 @@ import aiohttp
 
 from clients.base import BaseClient
 from logger import trace_config
-from settings import API_KEY_OPENWEATHER
+from settings import settings
 
 
 class WeatherClient(BaseClient):
@@ -37,5 +37,5 @@ class WeatherClient(BaseClient):
         """
 
         return await self._request(
-            f"{await self.get_base_url()}?units=metric&q={location}&appid={API_KEY_OPENWEATHER}"
+            f"{await self.get_base_url()}?units=metric&q={location}&appid={settings.API_KEY_OPENWEATHER}"
         )
