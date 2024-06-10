@@ -106,6 +106,7 @@ class CountryDTO(BaseModel):
     population: int
     subregion: str
     timezones: list[str]
+    area: float | None
 
 
 class CurrencyRatesDTO(BaseModel):
@@ -139,7 +140,9 @@ class WeatherInfoDTO(BaseModel):
             pressure=1023,
             humidity=54,
             wind_speed=4.63,
+            visibility=10000,
             description="scattered clouds",
+            timezone=7200,
         )
     """
 
@@ -147,7 +150,49 @@ class WeatherInfoDTO(BaseModel):
     pressure: int
     humidity: int
     wind_speed: float
+    visibility: int
     description: str
+    timezone: int
+
+
+class CountryShortInfo(BaseModel):
+    """
+    Модель кратких данных о стране.
+
+    .. code-block::
+
+        CountryShortInfo(
+            code="EE",
+            name="Estonia",
+        )
+    """
+
+    code: str
+    name: str
+
+
+class CityInfoDTO(BaseModel):
+    """
+    Модель данных о городе.
+
+    .. code-block::
+
+        CityInfoDTO(
+            country=CountryShortInfo(code="EE", name="Estonia"),
+            geo_id=588409,
+            latitude=59.436958,
+            longitude=24.753531,
+            name="Tallinn",
+            state_or_region="Harjumaa",
+        )
+    """
+
+    country: CountryShortInfo
+    geo_id: int
+    latitude: float
+    longitude: float
+    name: str
+    state_or_region: str
 
 
 class LocationInfoDTO(BaseModel):
@@ -201,3 +246,4 @@ class LocationInfoDTO(BaseModel):
     location: CountryDTO
     weather: WeatherInfoDTO
     currency_rates: dict[str, float]
+    capital: CityInfoDTO
