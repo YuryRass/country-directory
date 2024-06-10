@@ -5,12 +5,14 @@
 from difflib import SequenceMatcher
 from typing import Optional
 
+from clients.city import CityClient
 from collectors.collector import (
     CountryCollector,
     CurrencyRatesCollector,
     WeatherCollector,
 )
 from collectors.models import (
+    CityInfoDTO,
     CountryDTO,
     CurrencyInfoDTO,
     LocationDTO,
@@ -38,11 +40,13 @@ class Reader:
                 LocationDTO(capital=country.capital, alpha2code=country.alpha2code)
             )
             currency_rates = await self.get_currency_rates(country.currencies)
+            capital = await self.get_city_info(country.capital)
 
             return LocationInfoDTO(
                 location=country,
                 weather=weather,
                 currency_rates=currency_rates,
+                capital=capital,
             )
 
         return None
@@ -75,6 +79,20 @@ class Reader:
         """
         return await WeatherCollector.read(location=location)
 
+    @staticmethod
+    async def get_city_info(city_name: str) -> Optional[CityInfoDTO]:
+        """
+        Получение данных о городе.
+
+        :param city_name: Название города
+        :return:
+        """
+
+        city_info = await CityClient().get_city_info(city_name)
+        if city_info is not None:
+            return CityInfoDTO(**city_info)
+        return None
+
     async def find_country(self, search: str) -> Optional[CountryDTO]:
         """
         Поиск страны.
@@ -82,7 +100,6 @@ class Reader:
         :param search: Строка для поиска
         :return:
         """
-
         if countries := await CountryCollector.read():
             for country in countries:
                 if await self._match(search, country):
