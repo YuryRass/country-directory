@@ -2,6 +2,7 @@
 Функции для формирования выходной информации.
 """
 
+import time
 from decimal import ROUND_HALF_UP, Decimal
 
 from collectors.models import LocationInfoDTO
@@ -35,7 +36,14 @@ class Renderer:
             f"Языки: {await self._format_languages()}",
             f"Население страны: {await self._format_population()} чел.",
             f"Курсы валют: {await self._format_currency_rates()}",
-            f"Погода: {self.location_info.weather.temp} °C",
+            "Информация о погоде: ",
+            f"\tтемпература: {self.location_info.weather.temp} °C, ",
+            f"\tописание: {self.location_info.weather.description}, ",
+            f"\tвидимость (м): {self.location_info.weather.visibility}, ",
+            f"\tскорость ветра (м/с): {self.location_info.weather.wind_speed}",
+            f"Площадь страны: {self.location_info.location.area} кв. м.",
+            f"Координаты столицы: {await self._get_city_coordinates()}",
+            f"Текущее время в столице: {await self._get_city_time_by_timezone()}",
         )
 
     async def _format_languages(self) -> str:
@@ -71,3 +79,22 @@ class Renderer:
             f"{currency} = {Decimal(rates).quantize(exp=Decimal('.01'), rounding=ROUND_HALF_UP)} руб."
             for currency, rates in self.location_info.currency_rates.items()
         )
+
+    async def _get_city_coordinates(self) -> str:
+        """
+        Получение географических координат столицы.
+
+        :return:
+        """
+        return f"широта: {self.location_info.capital.latitude}, долгота: {self.location_info.capital.longitude}"
+
+    async def _get_city_time_by_timezone(self) -> str:
+        """
+        Получение времени в городе по его часовому поясу.
+
+        :return:
+        """
+
+        timezone = self.location_info.weather.timezone  # в секундах
+
+        return f"{time.ctime(time.time() + (timezone - 10800))} (UTC+{timezone / 3600})"
