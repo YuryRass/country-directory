@@ -31,4 +31,4 @@ class Settings(BaseSettings):
     CACHE_TTL_WEATHER: int = int("10_700")
 
 
-settings = Settings(_env_file=".env")
+settings = Settings(_env_file="../.env")
