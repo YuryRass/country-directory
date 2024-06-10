@@ -38,6 +38,7 @@ packaging==24.0
 pathspec==0.12.1
 platformdirs==4.2.2
 pluggy==1.5.0
+prettytable==3.10.0
 py==1.11.0
 pycares==4.4.0
 pycodestyle==2.9.1
@@ -69,5 +70,6 @@ tomlkit==0.12.5
 types-aiofiles==22.1.0.9
 typing_extensions==4.12.2
 urllib3==2.2.1
+wcwidth==0.2.13
 wrapt==1.16.0
 yarl==1.9.4
