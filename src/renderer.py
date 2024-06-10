@@ -5,6 +5,8 @@
 import time
 from decimal import ROUND_HALF_UP, Decimal
 
+from prettytable import PrettyTable, ALL
+
 from collectors.models import LocationInfoDTO
 
 
@@ -22,29 +24,32 @@ class Renderer:
 
         self.location_info = location_info
 
-    async def render(self) -> tuple[str, ...]:
+    async def render(self) -> PrettyTable:
         """
         Форматирование прочитанных данных.
 
         :return: Результат форматирования
         """
-
-        return (
-            f"Страна: {self.location_info.location.name}",
-            f"Столица: {self.location_info.location.capital}",
-            f"Регион: {self.location_info.location.subregion}",
-            f"Языки: {await self._format_languages()}",
-            f"Население страны: {await self._format_population()} чел.",
-            f"Курсы валют: {await self._format_currency_rates()}",
-            "Информация о погоде: ",
-            f"\tтемпература: {self.location_info.weather.temp} °C, ",
-            f"\tописание: {self.location_info.weather.description}, ",
-            f"\tвидимость (м): {self.location_info.weather.visibility}, ",
-            f"\tскорость ветра (м/с): {self.location_info.weather.wind_speed}",
-            f"Площадь страны: {self.location_info.location.area} кв. м.",
-            f"Координаты столицы: {await self._get_city_coordinates()}",
-            f"Текущее время в столице: {await self._get_city_time_by_timezone()}",
-        )
+        table = PrettyTable(["Type", "Info"], hrules=ALL, vrules=ALL, header_style="upper")
+        for key, value in {
+            "Страна": self.location_info.location.name,
+            "Столица": self.location_info.location.capital,
+            "Регион": self.location_info.location.subregion,
+            "Языки": (await self._format_languages()),
+            "Население страны": f"{await self._format_population()} чел.",
+            "Курсы валют": (await self._format_currency_rates()),
+            "Информация о погоде": (
+                f"температура: {self.location_info.weather.temp} °C, "
+                f"описание: {self.location_info.weather.description}, "
+                f"видимость (м): {self.location_info.weather.visibility}, "
+                f"скорость ветра (м/с): {self.location_info.weather.wind_speed}."
+            ),
+            "Площадь страны": f"{self.location_info.location.area} кв. м.",
+            "Координаты столицы": (await self._get_city_coordinates()),
+            "Текущее время в столице": (await self._get_city_time_by_timezone()),
+        }.items():
+            table.add_row([key, value])
+        return table
 
     async def _format_languages(self) -> str:
         """
