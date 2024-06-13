@@ -13,6 +13,7 @@ import aiofiles.os
 
 from clients.country import CountryClient
 from clients.currency import CurrencyClient
+from clients.news import NewsClient
 from clients.weather import WeatherClient
 from collectors.base import BaseCollector
 from collectors.models import (
@@ -20,6 +21,7 @@ from collectors.models import (
     CountryDTO,
     CurrencyRatesDTO,
     CurrencyInfoDTO,
+    NewsDTO,
     WeatherInfoDTO,
 )
 from settings import settings
@@ -222,12 +224,99 @@ class WeatherCollector(BaseCollector):
         return None
 
 
+class NewsCollector(BaseCollector):
+    """
+    Сбор новостей для стран.
+    """
+
+    def __init__(self) -> None:
+        self.client = NewsClient()
+
+    @staticmethod
+    async def get_file_path(filename: str = "", **kwargs: Any) -> str:
+        return f"{settings.MEDIA_PATH}/news/{filename}.json"
+
+    @staticmethod
+    async def get_cache_ttl() -> int:
+        return settings.CACHE_TTL_NEWS
+
+    async def collect(self, **kwargs: Any) -> None:
+
+        target_dir_path = f"{settings.MEDIA_PATH}/news"
+        # если целевой директории еще не существует, то она создается
+        if not await aiofiles.os.path.exists(target_dir_path):
+            await aiofiles.os.mkdir(target_dir_path)
+
+        countries = await self._get_countries_names()
+        for country_name in countries:
+            if await self.cache_invalid(filename=country_name):
+                # если кэш уже невалиден, то актуализируем его
+                short_country_name = country_name.split("_")[-1]
+                result = await self.client.get_news(short_country_name)
+                if result and result["totalResults"] > 0:
+                    result_str = json.dumps(result)
+                    async with aiofiles.open(
+                        await self.get_file_path(country_name), mode="w"
+                    ) as file:
+                        await file.write(result_str)
+
+    @staticmethod
+    async def _get_countries_names() -> list[str]:
+        """
+        Получение названий стран с их короткими названиями (alpha2code).
+        """
+        async with aiofiles.open(
+            f"{settings.MEDIA_PATH}/country.json", mode="r"
+        ) as file:
+            content = await file.read()
+
+        items = json.loads(content)
+        return [
+            f"{item['name'].replace(' ', '_')}_{item['alpha2code']}".lower()
+            for item in items
+        ]
+
+    @classmethod
+    async def read(cls, country_name: str) -> list[NewsDTO] | None:
+        """
+        Чтение данных из кэша.
+
+        :param country_name:
+        :return:
+        """
+
+        try:
+            async with aiofiles.open(
+                await cls.get_file_path(country_name), mode="r"
+            ) as file:
+                content = await file.read()
+        except FileNotFoundError:
+            return None
+
+        result = json.loads(content)
+        if result:
+            return [
+                NewsDTO(
+                    author=item["author"],
+                    title=item["title"],
+                    description=item["description"],
+                    publishedAt=item["publishedAt"],
+                    content=item["content"],
+                    url=item["url"],
+                )
+                for item in result["articles"]
+            ]
+
+        return None
+
+
 class Collectors:
     @staticmethod
     async def gather() -> tuple:
         return await asyncio.gather(
             CurrencyRatesCollector().collect(),
             CountryCollector().collect(),
+            NewsCollector().collect(),
         )
 
     @staticmethod
