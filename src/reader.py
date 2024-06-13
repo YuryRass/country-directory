@@ -9,6 +9,7 @@ from clients.city import CityClient
 from collectors.collector import (
     CountryCollector,
     CurrencyRatesCollector,
+    NewsCollector,
     WeatherCollector,
 )
 from collectors.models import (
@@ -17,6 +18,7 @@ from collectors.models import (
     CurrencyInfoDTO,
     LocationDTO,
     LocationInfoDTO,
+    NewsDTO,
     WeatherInfoDTO,
 )
 
@@ -41,15 +43,30 @@ class Reader:
             )
             currency_rates = await self.get_currency_rates(country.currencies)
             capital = await self.get_city_info(country.capital)
+            country_name = (
+                f"{country.name.replace(' ', '_')}_{country.alpha2code}".lower()
+            )
+            news = await self.get_news_from_country(country_name)
 
             return LocationInfoDTO(
                 location=country,
                 weather=weather,
                 currency_rates=currency_rates,
                 capital=capital,
+                news=news,
             )
 
         return None
+
+    @staticmethod
+    async def get_news_from_country(country_name: str) -> list[NewsDTO] | None:
+        """
+        Получение новостей в стране.
+
+        :param country_name: название страны
+        :return:
+        """
+        return await NewsCollector.read(country_name)
 
     @staticmethod
     async def get_currency_rates(currencies: set[CurrencyInfoDTO]) -> dict[str, float]:
