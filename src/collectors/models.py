@@ -211,6 +211,7 @@ class NewsDTO(BaseModel):
             url="http://site.ru/kjidpwk[]",
         )
     """
+
     author: str
     title: str
     description: str | None

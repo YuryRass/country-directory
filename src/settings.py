@@ -34,4 +34,4 @@ class Settings(BaseSettings):
     CACHE_TTL_NEWS: int = 3600
 
 
-settings = Settings(_env_file="../.env")
+settings = Settings()
