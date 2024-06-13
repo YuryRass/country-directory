@@ -33,7 +33,7 @@ async def process_input(location: str) -> None:
         click.secho("\nВывод информации в стране:", fg="magenta")
         click.secho(main_info, fg="green")
         if news is not None:
-            click.secho("Последние три новости в стране:", fg="magenta")
+            click.secho("\nПоследние три новости в стране:", fg="magenta")
             click.secho(news, fg="blue")
         else:
             click.secho("Новостей в стране нет!", fg="yellow")

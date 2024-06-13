@@ -78,8 +78,11 @@ class CountryCollector(BaseCollector):
         :return:
         """
 
-        async with aiofiles.open(await cls.get_file_path(), mode="r") as file:
-            content = await file.read()
+        try:
+            async with aiofiles.open(await cls.get_file_path(), mode="r") as file:
+                content = await file.read()
+        except FileNotFoundError:
+            return None
 
         if content:
             items = json.loads(content)
@@ -316,7 +319,6 @@ class Collectors:
         return await asyncio.gather(
             CurrencyRatesCollector().collect(),
             CountryCollector().collect(),
-            NewsCollector().collect(),
         )
 
     @staticmethod
@@ -325,6 +327,7 @@ class Collectors:
         try:
             results = loop.run_until_complete(Collectors.gather())
             loop.run_until_complete(WeatherCollector().collect(results[1]))
+            loop.run_until_complete(NewsCollector().collect())
             loop.run_until_complete(loop.shutdown_asyncgens())
 
         finally:
