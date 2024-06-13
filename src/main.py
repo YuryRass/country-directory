@@ -26,11 +26,19 @@ async def process_input(location: str) -> None:
 
     location_info = await Reader().find(location)
     if location_info:
-        lines = await Renderer(location_info).render()
+        rend = Renderer(location_info)
+        main_info = await rend.render()
+        news = await rend.top_3_news_in_country()
 
-        click.secho(lines, fg="green")
+        click.secho("\nВывод информации в стране:", fg="magenta")
+        click.secho(main_info, fg="green")
+        if news is not None:
+            click.secho("Последние три новости в стране:", fg="magenta")
+            click.secho(news, fg="blue")
+        else:
+            click.secho("Новостей в стране нет!", fg="yellow")
     else:
-        click.secho("Информация отсутствует.", fg="yellow")
+        click.secho("Информация отсутствует.", fg="red")
 
 
 if __name__ == "__main__":
