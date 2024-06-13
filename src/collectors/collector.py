@@ -13,7 +13,7 @@ import aiofiles.os
 
 from clients.country import CountryClient
 from clients.currency import CurrencyClient
-from clients.news import NewsClient
+from clients.news import COUNTRY_SHORT_NAMES, NewsClient
 from clients.weather import WeatherClient
 from collectors.base import BaseCollector
 from collectors.models import (
@@ -25,7 +25,6 @@ from collectors.models import (
     WeatherInfoDTO,
 )
 from settings import settings
-from clients.news import COUNTRY_SHORT_NAMES
 
 
 class CountryCollector(BaseCollector):
