@@ -25,6 +25,7 @@ from collectors.models import (
     WeatherInfoDTO,
 )
 from settings import settings
+from clients.news import COUNTRY_SHORT_NAMES
 
 
 class CountryCollector(BaseCollector):
@@ -252,9 +253,11 @@ class NewsCollector(BaseCollector):
 
         countries = await self._get_countries_names()
         for country_name in countries:
+            short_country_name = country_name.split("_")[-1]
+            if short_country_name not in COUNTRY_SHORT_NAMES:
+                continue
             if await self.cache_invalid(filename=country_name):
                 # если кэш уже невалиден, то актуализируем его
-                short_country_name = country_name.split("_")[-1]
                 result = await self.client.get_news(short_country_name)
                 if result and result["totalResults"] > 0:
                     result_str = json.dumps(result)
