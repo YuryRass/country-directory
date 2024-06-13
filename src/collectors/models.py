@@ -2,7 +2,8 @@
 Описание моделей данных (DTO).
 """
 
-from pydantic import Field, BaseModel
+from datetime import datetime
+from pydantic import Field, BaseModel, HttpUrl
 
 
 class HashableBaseModel(BaseModel):
@@ -195,6 +196,15 @@ class CityInfoDTO(BaseModel):
     state_or_region: str
 
 
+class NewsDTO(BaseModel):
+    author: str
+    title: str
+    description: str | None
+    publishedAt: datetime
+    content: str | None
+    url: HttpUrl
+
+
 class LocationInfoDTO(BaseModel):
     """
     Модель данных для представления общей информации о месте.
@@ -247,3 +257,4 @@ class LocationInfoDTO(BaseModel):
     weather: WeatherInfoDTO
     currency_rates: dict[str, float]
     capital: CityInfoDTO
+    news: list[NewsDTO] | None
