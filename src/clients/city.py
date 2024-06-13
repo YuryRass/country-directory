@@ -2,7 +2,7 @@
 Функции для взаимодействия с внешним сервисом-провайдером данных о городах.
 """
 from http import HTTPStatus
-from typing import Optional
+from typing import Any, Optional
 
 import aiohttp
 
@@ -19,13 +19,13 @@ class CityClient(BaseClient):
     async def get_base_url(self) -> str:
         return "https://api.apilayer.com/geo/city"
 
-    async def _request(self, endpoint: str) -> Optional[dict]:
+    async def _request(self, *args: Any) -> Optional[dict]:
 
         # формирование заголовков запроса
         headers = {"apikey": settings.API_KEY_APILAYER}
 
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
-            async with session.get(endpoint, headers=headers) as response:
+            async with session.get(args[0], headers=headers) as response:
                 if response.status == HTTPStatus.OK:
                     return (await response.json())[0]
 
