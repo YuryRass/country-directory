@@ -2,10 +2,12 @@
 Функции для формирования выходной информации.
 """
 
+import textwrap
 import time
 from decimal import ROUND_HALF_UP, Decimal
 
-from prettytable import PrettyTable, ALL
+import pyshorteners
+from prettytable import ALL, PrettyTable
 
 from collectors.models import LocationInfoDTO
 
@@ -30,7 +32,9 @@ class Renderer:
 
         :return: Результат форматирования
         """
-        table = PrettyTable(["Type", "Info"], hrules=ALL, vrules=ALL, header_style="upper")
+        table = PrettyTable(
+            ["Type", "Info"], hrules=ALL, vrules=ALL, header_style="upper"
+        )
         for key, value in {
             "Страна": self.location_info.location.name,
             "Столица": self.location_info.location.capital,
@@ -49,6 +53,26 @@ class Renderer:
             "Текущее время в столице": (await self._get_city_time_by_timezone()),
         }.items():
             table.add_row([key, value])
+        table.max_width = 40
+
+        return table
+
+    async def top_3_news_in_country(self) -> PrettyTable | None:
+        table = PrettyTable(
+            ["author", "title", "url"],
+            hrules=ALL,
+            vrules=ALL,
+            header_style="upper",
+        )
+        if self.location_info.news is None:
+            return None
+        # вытаскиваем три самые свежие новости
+        for new in self.location_info.news[:3]:
+            shortener = pyshorteners.Shortener()
+            # Сокращаем длинную URL
+            short_url = shortener.tinyurl.short(new.url)
+            table.add_row([new.author, textwrap.fill(new.title, width=20), short_url])
+
         return table
 
     async def _format_languages(self) -> str:
