@@ -197,6 +197,20 @@ class CityInfoDTO(BaseModel):
 
 
 class NewsDTO(BaseModel):
+    """
+    Модель данных для представления новостей в стране.
+
+    .. code-block::
+
+        NewsDTO(
+            author="Иванов И.И.",
+            title="Ограбление века",
+            description="Ограбили Аллу Пугачеву",
+            pablishedAt="2024-06-06 10:57:25",
+            content="bla bla bla...",
+            url="http://site.ru/kjidpwk[]",
+        )
+    """
     author: str
     title: str
     description: str | None
@@ -250,6 +264,8 @@ class LocationInfoDTO(BaseModel):
             currency_rates={
                 "EUR": 0.016503,
             },
+            capital=CityInfoDTO(...),
+            news=[NewsDTO(...), ..., NewsDTO(...)],
         )
     """
 
