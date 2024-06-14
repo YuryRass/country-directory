@@ -5,7 +5,6 @@
 import pytest
 
 from clients.news import NewsClient
-from settings import settings
 
 
 @pytest.mark.asyncio
