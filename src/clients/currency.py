@@ -2,7 +2,7 @@
 Функции для взаимодействия с внешним сервисом-провайдером данных о курсах валют.
 """
 from http import HTTPStatus
-from typing import Any, Optional
+from typing import Optional
 
 import aiohttp
 
@@ -11,21 +11,24 @@ from logger import trace_config
 from settings import settings
 
 
+BASE_URL = "https://api.apilayer.com/fixer/latest"
+
+
 class CurrencyClient(BaseClient):
     """
     Реализация функций для взаимодействия с внешним сервисом-провайдером данных о курсах валют.
     """
 
     async def get_base_url(self) -> str:
-        return "https://api.apilayer.com/fixer/latest"
+        return BASE_URL
 
-    async def _request(self, *args: Any) -> Optional[dict]:
+    async def _request(self, endpoint: str) -> Optional[dict]:
 
         # формирование заголовков запроса
         headers = {"apikey": settings.API_KEY_APILAYER}
 
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
-            async with session.get(args[0], headers=headers) as response:
+            async with session.get(endpoint, headers=headers) as response:
                 if response.status == HTTPStatus.OK:
                     return await response.json()
 

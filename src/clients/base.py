@@ -3,7 +3,7 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Optional
 
 
 class BaseClient(ABC):
@@ -20,10 +20,10 @@ class BaseClient(ABC):
         """
 
     @abstractmethod
-    async def _request(self, *args: Any) -> Optional[dict]:
+    async def _request(self, endpoint: str) -> Optional[dict]:
         """
         Формирование и выполнение запроса.
 
-        :param *args:
+        :param endpont:
         :return:
         """
