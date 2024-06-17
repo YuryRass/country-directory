@@ -25,6 +25,6 @@ async def on_request_start(
     logging.getLogger("aiohttp.client").debug("Starting request <%s>", params)
 
 
-logging.basicConfig(level=settings.LOGGING_LEVEL)
+logging.basicConfig(level=settings.LOGGING_LEVEL, format=settings.LOGGING_FORMAT)
 trace_config = aiohttp.TraceConfig()
 trace_config.on_request_start.append(on_request_start)
