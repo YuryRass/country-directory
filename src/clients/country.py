@@ -28,10 +28,11 @@ class CountryClient(BaseClient):
 
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
             async with session.get(endpoint, headers=headers) as response:
-                if response.status == HTTPStatus.OK:
-                    return await response.json()
-
-                return None
+                return (
+                    (await response.json())
+                    if response.status == HTTPStatus.OK
+                    else None
+                )
 
     async def get_countries(self, bloc: str = "eu") -> Optional[dict]:
         """

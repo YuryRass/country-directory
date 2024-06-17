@@ -89,10 +89,11 @@ class NewsClient(BaseClient):
 
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
             async with session.get(endpoint, params=params) as response:
-                if response.status == HTTPStatus.OK:
-                    return await response.json()
-
-                return None
+                return (
+                    (await response.json())
+                    if response.status == HTTPStatus.OK
+                    else None
+                )
 
     def _get_query_params(self, country: str) -> dict[str, str]:
         return {

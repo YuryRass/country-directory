@@ -43,8 +43,8 @@ class Reader:
             )
             currency_rates = await self.get_currency_rates(country.currencies)
             capital = await self.get_city_info(country.capital)
-            country_name = (
-                f"{country.name.replace(' ', '_')}_{country.alpha2code}".lower()
+            country_name = await self._get_country_name(
+                country.name, country.alpha2code
             )
             news = await self.get_news_from_country(country_name)
 
@@ -106,9 +106,7 @@ class Reader:
         """
 
         city_info = await CityClient().get_city_info(city_name)
-        if city_info is not None:
-            return CityInfoDTO(**city_info)
-        return None
+        return CityInfoDTO(**city_info) if city_info else None
 
     async def find_country(self, search: str) -> Optional[CountryDTO]:
         """
@@ -152,3 +150,16 @@ class Reader:
                 return True
 
         return False
+
+    @staticmethod
+    async def _get_country_name(country_name: str, short_country_name: str) -> str:
+        """
+        Получение названия страны в следующем формате:
+        "<название страны>_<название страны в формате alpha2code>.
+
+        :param country_name: Название страны
+        :param short_country_name: Короткое название страны в формате alpha2code
+        :return:
+        """
+
+        return f"{country_name.replace(' ', '_')}_{short_country_name}".lower()

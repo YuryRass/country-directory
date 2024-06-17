@@ -1,6 +1,7 @@
 """
 Базовые функции сборщиков информации о странах.
 """
+from pathlib import Path
 import time
 from abc import ABC, abstractmethod
 from typing import Iterable, Any, Optional
@@ -20,12 +21,12 @@ class BaseCollector(ABC):
 
     @staticmethod
     @abstractmethod
-    async def get_file_path(**kwargs: Any) -> str:
+    async def get_file_path(**kwargs: Any) -> Path:
         ...
 
-    @staticmethod
+    @property
     @abstractmethod
-    async def get_cache_ttl() -> int:
+    async def cache_ttl(self) -> int:
         ...
 
     async def cache_invalid(self, **kwargs: Any) -> bool:
@@ -50,7 +51,7 @@ class BaseCollector(ABC):
             # и времени последнего изменения файла
             # (или если файл существует и не пустой, но данные в нем уже устарели)
             or (time.time() - await aiofiles.os.path.getmtime(file_path))
-            > await self.get_cache_ttl()
+            > await self.cache_ttl
         ):
             return True
 

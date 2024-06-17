@@ -2,17 +2,24 @@
 Настройки проекта.
 """
 
+from pathlib import Path
+from typing import Any
 
 from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
+    # базовая директория
+    BASE_DIR: Path = Path.cwd().parent
+    # название директории для сохранения файлов
+    MEDIA_DIR: str = "media"
+    # название директории для логирования
+    LOGGING_DIR: str = "logs"
 
-    # путь к директории для сохранения файлов
-    MEDIA_PATH: str = "../media"
+    # абсолютные пути до директорий
+    MEDIA_ABSOLUTE_PATH: Path = BASE_DIR.joinpath(MEDIA_DIR)
+    LOGGING_ABSOLUTE_PATH: Path = BASE_DIR.joinpath(LOGGING_DIR)
 
-    # путь к директории для логирования
-    LOGGING_PATH: str = "../logs"
     # формат для записей логов
     LOGGING_FORMAT: str = "%(name)s %(asctime)s %(levelname)s %(message)s"
 
@@ -34,4 +41,8 @@ class Settings(BaseSettings):
     CACHE_TTL_NEWS: int = 3600
 
 
-settings = Settings()
+def get_settings(**kwargs: Any) -> Settings:
+    return Settings(**kwargs)
+
+
+settings = get_settings()

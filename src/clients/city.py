@@ -24,16 +24,13 @@ class CityClient(BaseClient):
         return BASE_URL
 
     async def _request(self, endpoint: str) -> Optional[dict]:
-
-        # формирование заголовков запроса
-        headers = {"apikey": settings.API_KEY_APILAYER}
-
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
-            async with session.get(endpoint, headers=headers) as response:
-                if response.status == HTTPStatus.OK:
-                    return (await response.json())[0]
-
-                return None
+            async with session.get(endpoint, headers=(await self.headers)) as response:
+                return (
+                    (await response.json())[0]
+                    if response.status == HTTPStatus.OK
+                    else None
+                )
 
     async def get_city_info(self, city_name: str) -> Optional[dict]:
         """
@@ -50,3 +47,7 @@ class CityClient(BaseClient):
                 city=city_name,
             )
         )
+
+    @property
+    async def headers(self) -> dict[str, str]:
+        return {"apikey": settings.API_KEY_APILAYER}

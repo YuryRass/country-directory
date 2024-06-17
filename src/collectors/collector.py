@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from pathlib import Path
 from typing import Any, Optional, FrozenSet
 
 import aiofiles
@@ -36,11 +37,11 @@ class CountryCollector(BaseCollector):
         self.client = CountryClient()
 
     @staticmethod
-    async def get_file_path(**kwargs: Any) -> str:
-        return f"{settings.MEDIA_PATH}/country.json"
+    async def get_file_path(**kwargs: Any) -> Path:
+        return settings.MEDIA_ABSOLUTE_PATH.joinpath("country.json")
 
-    @staticmethod
-    async def get_cache_ttl() -> int:
+    @property
+    async def cache_ttl(self) -> int:
         return settings.CACHE_TTL_COUNTRY
 
     async def collect(self, **kwargs: Any) -> Optional[FrozenSet[LocationDTO]]:
@@ -57,18 +58,17 @@ class CountryCollector(BaseCollector):
             content = await file.read()
 
         result = json.loads(content)
-        if result:
-            locations = frozenset(
-                LocationDTO(
-                    capital=item["capital"],
-                    alpha2code=item["alpha2code"],
-                )
-                for item in result
+        if not result:
+            return None
+        locations = frozenset(
+            LocationDTO(
+                capital=item["capital"],
+                alpha2code=item["alpha2code"],
             )
+            for item in result
+        )
 
-            return locations
-
-        return None
+        return locations
 
     @classmethod
     async def read(cls) -> Optional[list[CountryDTO]]:
@@ -79,37 +79,38 @@ class CountryCollector(BaseCollector):
         """
 
         try:
+            print(await cls.get_file_path())
             async with aiofiles.open(await cls.get_file_path(), mode="r") as file:
                 content = await file.read()
         except FileNotFoundError:
             return None
 
-        if content:
-            items = json.loads(content)
-            result_list = []
-            for item in items:
-                result_list.append(
-                    CountryDTO(
-                        capital=item["capital"],
-                        alpha2code=item["alpha2code"],
-                        alt_spellings=item["alt_spellings"],
-                        currencies={
-                            CurrencyInfoDTO(code=currency["code"])
-                            for currency in item["currencies"]
-                        },
-                        flag=item["flag"],
-                        languages=item["languages"],
-                        name=item["name"],
-                        population=item["population"],
-                        subregion=item["subregion"],
-                        timezones=item["timezones"],
-                        area=item["area"],
-                    )
+        if not content:
+            return None
+
+        items = json.loads(content)
+        result_list = []
+        for item in items:
+            result_list.append(
+                CountryDTO(
+                    capital=item["capital"],
+                    alpha2code=item["alpha2code"],
+                    alt_spellings=item["alt_spellings"],
+                    currencies={
+                        CurrencyInfoDTO(code=currency["code"])
+                        for currency in item["currencies"]
+                    },
+                    flag=item["flag"],
+                    languages=item["languages"],
+                    name=item["name"],
+                    population=item["population"],
+                    subregion=item["subregion"],
+                    timezones=item["timezones"],
+                    area=item["area"],
                 )
+            )
 
-            return result_list
-
-        return None
+        return result_list
 
 
 class CurrencyRatesCollector(BaseCollector):
@@ -121,11 +122,11 @@ class CurrencyRatesCollector(BaseCollector):
         self.client = CurrencyClient()
 
     @staticmethod
-    async def get_file_path(**kwargs: Any) -> str:
-        return f"{settings.MEDIA_PATH}/currency_rates.json"
+    async def get_file_path(**kwargs: Any) -> Path:
+        return settings.MEDIA_ABSOLUTE_PATH.joinpath("currency_rates.json")
 
-    @staticmethod
-    async def get_cache_ttl() -> int:
+    @property
+    async def cache_ttl(self) -> int:
         return settings.CACHE_TTL_CURRENCY_RATES
 
     async def collect(self, **kwargs: Any) -> None:
@@ -148,16 +149,16 @@ class CurrencyRatesCollector(BaseCollector):
         async with aiofiles.open(await cls.get_file_path(), mode="r") as file:
             content = await file.read()
 
-        if content:
-            result = json.loads(content)
+        if not content:
+            return None
 
-            return CurrencyRatesDTO(
-                base=result["base"],
-                date=result["date"],
-                rates=result["rates"],
-            )
+        result = json.loads(content)
 
-        return None
+        return CurrencyRatesDTO(
+            base=result["base"],
+            date=result["date"],
+            rates=result["rates"],
+        )
 
 
 class WeatherCollector(BaseCollector):
@@ -169,18 +170,21 @@ class WeatherCollector(BaseCollector):
         self.client = WeatherClient()
 
     @staticmethod
-    async def get_file_path(filename: str = "", **kwargs: Any) -> str:
-        return f"{settings.MEDIA_PATH}/weather/{filename}.json"
+    async def get_file_path(filename: str = "", **kwargs: Any) -> Path:
+        # return f"{settings.MEDIA_PATH}/weather/{filename}.json"
+        return settings.MEDIA_ABSOLUTE_PATH.joinpath("weather").joinpath(
+            f"{filename}.json"
+        )
 
-    @staticmethod
-    async def get_cache_ttl() -> int:
+    @property
+    async def cache_ttl(self) -> int:
         return settings.CACHE_TTL_WEATHER
 
     async def collect(
         self, locations: FrozenSet[LocationDTO] = frozenset(), **kwargs: Any
     ) -> None:
 
-        target_dir_path = f"{settings.MEDIA_PATH}/weather"
+        target_dir_path = f"{settings.MEDIA_ABSOLUTE_PATH}/weather"
         # если целевой директории еще не существует, то она создается
         if not await aiofiles.os.path.exists(target_dir_path):
             await aiofiles.os.mkdir(target_dir_path)
@@ -213,18 +217,17 @@ class WeatherCollector(BaseCollector):
             content = await file.read()
 
         result = json.loads(content)
-        if result:
-            return WeatherInfoDTO(
-                temp=result["main"]["temp"],
-                pressure=result["main"]["pressure"],
-                humidity=result["main"]["humidity"],
-                wind_speed=result["wind"]["speed"],
-                description=result["weather"][0]["description"],
-                visibility=result["visibility"],
-                timezone=result["timezone"],
-            )
-
-        return None
+        if not result:
+            return None
+        return WeatherInfoDTO(
+            temp=result["main"]["temp"],
+            pressure=result["main"]["pressure"],
+            humidity=result["main"]["humidity"],
+            wind_speed=result["wind"]["speed"],
+            description=result["weather"][0]["description"],
+            visibility=result["visibility"],
+            timezone=result["timezone"],
+        )
 
 
 class NewsCollector(BaseCollector):
@@ -236,16 +239,18 @@ class NewsCollector(BaseCollector):
         self.client = NewsClient()
 
     @staticmethod
-    async def get_file_path(filename: str = "", **kwargs: Any) -> str:
-        return f"{settings.MEDIA_PATH}/news/{filename}.json"
+    async def get_file_path(filename: str = "", **kwargs: Any) -> Path:
+        return settings.MEDIA_ABSOLUTE_PATH.joinpath("news").joinpath(
+            f"{filename}.json"
+        )
 
-    @staticmethod
-    async def get_cache_ttl() -> int:
+    @property
+    async def cache_ttl(self) -> int:
         return settings.CACHE_TTL_NEWS
 
     async def collect(self, **kwargs: Any) -> None:
 
-        target_dir_path = f"{settings.MEDIA_PATH}/news"
+        target_dir_path = settings.MEDIA_ABSOLUTE_PATH.joinpath("news")
         # если целевой директории еще не существует, то она создается
         if not await aiofiles.os.path.exists(target_dir_path):
             await aiofiles.os.mkdir(target_dir_path)
@@ -271,7 +276,7 @@ class NewsCollector(BaseCollector):
         Получение названий стран с их короткими названиями (alpha2code).
         """
         async with aiofiles.open(
-            f"{settings.MEDIA_PATH}/country.json", mode="r"
+            settings.MEDIA_ABSOLUTE_PATH.joinpath("country.json"), mode="r"
         ) as file:
             content = await file.read()
 
@@ -299,20 +304,19 @@ class NewsCollector(BaseCollector):
             return None
 
         result = json.loads(content)
-        if result:
-            return [
-                NewsDTO(
-                    author=item["author"],
-                    title=item["title"],
-                    description=item["description"],
-                    publishedAt=item["publishedAt"],
-                    content=item["content"],
-                    url=item["url"],
-                )
-                for item in result["articles"]
-            ]
-
-        return None
+        if not result:
+            return None
+        return [
+            NewsDTO(
+                author=item["author"],
+                title=item["title"],
+                description=item["description"],
+                publishedAt=item["publishedAt"],
+                content=item["content"],
+                url=item["url"],
+            )
+            for item in result["articles"]
+        ]
 
 
 class Collectors:

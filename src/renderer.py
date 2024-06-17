@@ -5,6 +5,7 @@
 import textwrap
 import time
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
 
 import pyshorteners
 from prettytable import ALL, PrettyTable
@@ -35,23 +36,7 @@ class Renderer:
         table = PrettyTable(
             ["Type", "Info"], hrules=ALL, vrules=ALL, header_style="upper"
         )
-        for key, value in {
-            "Страна": self.location_info.location.name,
-            "Столица": self.location_info.location.capital,
-            "Регион": self.location_info.location.subregion,
-            "Языки": (await self._format_languages()),
-            "Население страны": f"{await self._format_population()} чел.",
-            "Курсы валют": (await self._format_currency_rates()),
-            "Информация о погоде": (
-                f"температура: {self.location_info.weather.temp} °C, "
-                f"описание: {self.location_info.weather.description}, "
-                f"видимость (м): {self.location_info.weather.visibility}, "
-                f"скорость ветра (м/с): {self.location_info.weather.wind_speed}."
-            ),
-            "Площадь страны": f"{self.location_info.location.area} кв. м.",
-            "Координаты столицы": (await self._get_city_coordinates()),
-            "Текущее время в столице": (await self._get_city_time_by_timezone()),
-        }.items():
+        for key, value in (await self._get_formatted_info()).items():
             table.add_row([key, value])
         table.max_width = 40
 
@@ -127,3 +112,23 @@ class Renderer:
         timezone = self.location_info.weather.timezone  # в секундах
 
         return f"{time.ctime(time.time() + (timezone - 10800))} (UTC+{timezone / 3600})"
+
+    async def _get_formatted_info(self) -> dict[str, Any]:
+        """Получение форматированного вывода с информацией о стране."""
+        return {
+            "Страна": self.location_info.location.name,
+            "Столица": self.location_info.location.capital,
+            "Регион": self.location_info.location.subregion,
+            "Языки": (await self._format_languages()),
+            "Население страны": f"{await self._format_population()} чел.",
+            "Курсы валют": (await self._format_currency_rates()),
+            "Информация о погоде": (
+                f"температура: {self.location_info.weather.temp} °C, "
+                f"описание: {self.location_info.weather.description}, "
+                f"видимость (м): {self.location_info.weather.visibility}, "
+                f"скорость ветра (м/с): {self.location_info.weather.wind_speed}."
+            ),
+            "Площадь страны": f"{self.location_info.location.area} кв. м.",
+            "Координаты столицы": (await self._get_city_coordinates()),
+            "Текущее время в столице": (await self._get_city_time_by_timezone()),
+        }
