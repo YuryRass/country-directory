@@ -6,7 +6,9 @@ import pytest
 
 from collectors.collector import CountryCollector
 from collectors.models import LocationDTO
-from settings import settings
+from settings import get_settings
+
+settings = get_settings()
 
 
 @pytest.mark.asyncio

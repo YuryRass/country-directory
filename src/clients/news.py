@@ -9,7 +9,9 @@ import aiohttp
 
 from clients.base import BaseClient
 from logger import trace_config
-from settings import settings
+from settings import get_settings
+
+settings = get_settings()
 
 
 COUNTRY_SHORT_NAMES = [
@@ -70,30 +72,26 @@ COUNTRY_SHORT_NAMES = [
 ]
 
 
-BASE_URL = "https://newsapi.org/v2/top-headlines"
-
-
 class NewsClient(BaseClient):
     """
     Реализация функций для взаимодействия с внешним сервисом-провайдером
     получения последних новостей в стране.
     """
 
-    async def get_base_url(self) -> str:
-        return BASE_URL
+    BASE_URL = "https://newsapi.org/v2/top-headlines"
 
-    async def _request(self, endpoint: str, country: str = "ru") -> Optional[dict]:
+    async def get_base_url(self) -> str:
+        return self.BASE_URL
+
+    async def _request(self, endpoint: str, country: str = "ru") -> Optional[dict]:  # type: ignore[return]
 
         # формирование параметров запроса
         params = self._get_query_params(country)
 
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
             async with session.get(endpoint, params=params) as response:
-                return (
-                    (await response.json())
-                    if response.status == HTTPStatus.OK
-                    else None
-                )
+                if response.status == HTTPStatus.OK:
+                    return await response.json()
 
     def _get_query_params(self, country: str) -> dict[str, str]:
         return {

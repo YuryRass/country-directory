@@ -8,10 +8,9 @@ import aiohttp
 
 from clients.base import BaseClient
 from logger import trace_config
-from settings import settings
+from settings import get_settings
 
-
-BASE_URL = "https://api.apilayer.com/fixer/latest"
+settings = get_settings()
 
 
 class CurrencyClient(BaseClient):
@@ -19,21 +18,20 @@ class CurrencyClient(BaseClient):
     Реализация функций для взаимодействия с внешним сервисом-провайдером данных о курсах валют.
     """
 
-    async def get_base_url(self) -> str:
-        return BASE_URL
+    BASE_URL = "https://api.apilayer.com/fixer/latest"
 
-    async def _request(self, endpoint: str) -> Optional[dict]:
+    async def get_base_url(self) -> str:
+        return self.BASE_URL
+
+    async def _request(self, endpoint: str) -> Optional[dict]:  # type: ignore[return]
 
         # формирование заголовков запроса
         headers = {"apikey": settings.API_KEY_APILAYER}
 
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
             async with session.get(endpoint, headers=headers) as response:
-                return (
-                    (await response.json())
-                    if response.status == HTTPStatus.OK
-                    else None
-                )
+                if response.status == HTTPStatus.OK:
+                    return await response.json()
 
     async def get_rates(self, base: str = "rub") -> Optional[dict]:
         """

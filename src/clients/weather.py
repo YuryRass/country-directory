@@ -8,9 +8,9 @@ import aiohttp
 
 from clients.base import BaseClient
 from logger import trace_config
-from settings import settings
+from settings import get_settings
 
-BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
+settings = get_settings()
 
 
 class WeatherClient(BaseClient):
@@ -18,18 +18,17 @@ class WeatherClient(BaseClient):
     Реализация функций для взаимодействия с внешним сервисом-провайдером данных о погоде.
     """
 
-    async def get_base_url(self) -> str:
-        return BASE_URL
+    BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 
-    async def _request(self, endpoint: str) -> Optional[dict]:
+    async def get_base_url(self) -> str:
+        return self.BASE_URL
+
+    async def _request(self, endpoint: str) -> Optional[dict]:  # type: ignore[return]
 
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
             async with session.get(endpoint) as response:
-                return (
-                    (await response.json())
-                    if response.status == HTTPStatus.OK
-                    else None
-                )
+                if response.status == HTTPStatus.OK:
+                    return await response.json()
 
     async def get_weather(self, location: str) -> Optional[dict]:
         """

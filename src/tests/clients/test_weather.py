@@ -5,7 +5,9 @@
 import pytest
 
 from clients.weather import WeatherClient
-from settings import settings
+from settings import get_settings
+
+settings = get_settings()
 
 
 @pytest.mark.asyncio

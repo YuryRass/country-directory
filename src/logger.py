@@ -7,7 +7,9 @@ from types import SimpleNamespace
 import aiohttp
 from aiohttp import ClientSession, TraceRequestStartParams
 
-from settings import settings
+from settings import get_settings
+
+settings = get_settings()
 
 
 async def on_request_start(

@@ -43,6 +43,3 @@ class Settings(BaseSettings):
 
 def get_settings(**kwargs: Any) -> Settings:
     return Settings(**kwargs)
-
-
-settings = get_settings()

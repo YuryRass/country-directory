@@ -9,10 +9,9 @@ import aiohttp
 
 from clients.base import BaseClient
 from logger import trace_config
-from settings import settings
+from settings import get_settings
 
-
-BASE_URL = "https://api.apilayer.com/geo/city"
+settings = get_settings()
 
 
 class CityClient(BaseClient):
@@ -20,17 +19,16 @@ class CityClient(BaseClient):
     Реализация функций для взаимодействия с внешним сервисом-провайдером данных о городах.
     """
 
-    async def get_base_url(self) -> str:
-        return BASE_URL
+    BASE_URL = "https://api.apilayer.com/geo/city"
 
-    async def _request(self, endpoint: str) -> Optional[dict]:
+    async def get_base_url(self) -> str:
+        return self.BASE_URL
+
+    async def _request(self, endpoint: str) -> Optional[dict]:  # type: ignore[return]
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
             async with session.get(endpoint, headers=(await self.headers)) as response:
-                return (
-                    (await response.json())[0]
-                    if response.status == HTTPStatus.OK
-                    else None
-                )
+                if response.status == HTTPStatus.OK:
+                    return (await response.json())[0]
 
     async def get_city_info(self, city_name: str) -> Optional[dict]:
         """

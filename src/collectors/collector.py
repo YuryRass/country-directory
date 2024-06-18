@@ -25,7 +25,9 @@ from collectors.models import (
     NewsDTO,
     WeatherInfoDTO,
 )
-from settings import settings
+from settings import get_settings
+
+settings = get_settings()
 
 
 class CountryCollector(BaseCollector):
@@ -170,8 +172,7 @@ class WeatherCollector(BaseCollector):
         self.client = WeatherClient()
 
     @staticmethod
-    async def get_file_path(filename: str = "", **kwargs: Any) -> Path:
-        # return f"{settings.MEDIA_PATH}/weather/{filename}.json"
+    async def get_file_path(filename: str, **kwargs: Any) -> Path:  # type: ignore[override]
         return settings.MEDIA_ABSOLUTE_PATH.joinpath("weather").joinpath(
             f"{filename}.json"
         )
@@ -239,7 +240,7 @@ class NewsCollector(BaseCollector):
         self.client = NewsClient()
 
     @staticmethod
-    async def get_file_path(filename: str = "", **kwargs: Any) -> Path:
+    async def get_file_path(filename: str, **kwargs: Any) -> Path:  # type: ignore[override]
         return settings.MEDIA_ABSOLUTE_PATH.joinpath("news").joinpath(
             f"{filename}.json"
         )
