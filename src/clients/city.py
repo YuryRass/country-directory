@@ -28,7 +28,7 @@ class CityClient(BaseClient):
         async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
             async with session.get(endpoint, headers=(await self.headers)) as response:
                 if response.status == HTTPStatus.OK:
-                    return (await response.json())[0]
+                    return await response.json()[0]
 
     async def get_city_info(self, city_name: str) -> Optional[dict]:
         """
